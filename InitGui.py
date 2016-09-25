@@ -32,6 +32,7 @@ def shortCuts():
     from PySide import QtCore
     import FreeCADGui as Gui
     import FreeCAD as App
+    from ShortCutsLocator import delayTimer
 
     macOS = False
 
@@ -170,6 +171,43 @@ def shortCuts():
             del actions[d]
 
         return actions
+
+    def keyDelay():
+        """
+        Set timer interval.
+        Start key delay timer.
+        """
+        timer.stop()
+
+        if paramGet.GetInt("Delay"):
+            timer.setInterval(paramGet.GetInt("Delay"))
+        else:
+            timer.setInterval(1000)
+
+        timer.start()
+
+    def onDelay():
+        """
+        Run the command on timer timeout.
+        """
+        action = None
+        text = edit.text().upper()
+
+        if text in currentCombinations:
+            action = currentCombinations[text]
+        else:
+            pass
+
+        if action and action.isEnabled():
+            setVisibility(mode=1)
+            action.trigger()
+        else:
+            pass
+
+    timer = delayTimer()
+    timer.setParent(mw)
+    timer.setSingleShot(True)
+    timer.timeout.connect(onDelay)
 
     class ShortCutsEdit(QtGui.QLineEdit):
         """
@@ -401,10 +439,13 @@ def shortCuts():
     def modelData():
         """
         Model data for completer.
+        Create a dictionary of unique shortcut combinations.
         """
+        duplicates = []
         applyShortcuts()
 
         actions = actionList()
+        currentCombinations.clear()
 
         if Gui.activeWorkbench().MenuText:
             activeWB = Gui.activeWorkbench().MenuText
@@ -440,6 +481,14 @@ def shortCuts():
                     model.setItem(row, 0, item)
                     row += 1
 
+                    if shortcut in currentCombinations:
+                        if shortcut not in duplicates:
+                            duplicates.append(shortcut)
+                        else:
+                            pass
+                    else:
+                        currentCombinations[shortcut] = actions[command]
+
             for command in currentGlobal:
                 if command in actions:
                     item = QtGui.QStandardItem()
@@ -465,6 +514,17 @@ def shortCuts():
                     model.setItem(row, 0, item)
                     row += 1
 
+                    if shortcut in currentCombinations:
+                        if shortcut not in duplicates:
+                            duplicates.append(shortcut)
+                        else:
+                            pass
+                    else:
+                        currentCombinations[shortcut] = actions[command]
+
+            for d in duplicates:
+                del currentCombinations[d]
+
     completer = QtGui.QCompleter()
     completer.setModel(model)
     completer.setMaxVisibleItems(16)
@@ -473,9 +533,11 @@ def shortCuts():
 
     def onHighlighted():
         """
+        Stop the timer on down key.
         Hide preferences button.
         Increase line edit size.
         """
+        timer.stop()
         buttonPref.hide()
         edit.setMinimumWidth(220)
 
@@ -511,10 +573,14 @@ def shortCuts():
 
     def onTextEdited(text):
         """
+        Start the timer on last key.
         Restore default line edit size.
         """
         if text:
-            pass
+            if paramGet.GetBool("EnableDelay"):
+                keyDelay()
+            else:
+                pass
         else:
             edit.setMinimumWidth(40)
             edit.setGeometry(10, 10, 40, 24)
@@ -561,6 +627,7 @@ def shortCuts():
 
     currentLocal = {}
     currentGlobal = {}
+    currentCombinations = {}
 
     if macOS:
         menu = QtGui.QMenu(mw)
@@ -590,6 +657,7 @@ def shortCuts():
 
         if macOS:
             if menu.isVisible() or mode == 1:
+                timer.stop()
                 edit.clear()
                 menu.hide()
                 completer.popup().hide()
@@ -604,6 +672,7 @@ def shortCuts():
                 edit.setFocus()
         else:
             if edit.isVisible() or mode == 1:
+                timer.stop()
                 edit.clear()
                 edit.hide()
                 completer.popup().hide()
@@ -617,11 +686,13 @@ def shortCuts():
                 edit.setFocus()
 
     invokeKey = QtGui.QAction(mw)
+    invokeKey.setAutoRepeat(False)
     invokeKey.setObjectName("Std_ShortCuts")
     invokeKey.setShortcut(QtGui.QKeySequence("W"))
     invokeKey.triggered.connect(setVisibility)
 
     additionalKey = QtGui.QAction(mw)
+    additionalKey.setAutoRepeat(False)
     additionalKey.triggered.connect(setVisibility)
 
     mw.addAction(invokeKey)
@@ -695,6 +766,22 @@ def shortCuts():
                     buttonDone.setFocus()
                 else:
                     QtGui.QLineEdit.keyPressEvent(self, e)
+
+        class DelaySpinBox(QtGui.QSpinBox):
+            """
+            Delay SpinBox focus behaviour.
+            """
+            def __init__(self, parent=None):
+                super(DelaySpinBox, self).__init__(parent)
+
+            def keyPressEvent(self, e):
+                """
+                Set focus (button Done) on Return key pressed.
+                """
+                if e.key() == QtCore.Qt.Key_Return:
+                    buttonDone.setFocus()
+                else:
+                    QtGui.QSpinBox.keyPressEvent(self, e)
 
         def comboBox():
             """
@@ -878,6 +965,23 @@ def shortCuts():
 
             setInvokeKey()
 
+        def onCheckDelay():
+            """
+            Save enable or disable autorun command state.
+            """
+            if checkDelay.isChecked():
+                paramGet.SetBool("EnableDelay", 1)
+                spinDelay.setEnabled(True)
+            else:
+                paramGet.SetBool("EnableDelay", 0)
+                spinDelay.setEnabled(False)
+
+        def onSpinDelay(i):
+            """
+            Save delay time setting.
+            """
+            paramGet.SetInt("Delay", i)
+
         dialog = QtGui.QDialog(mw)
         dialog.resize(800, 450)
         dialog.setWindowTitle("ShortCuts")
@@ -942,6 +1046,17 @@ def shortCuts():
         menuMod.addAction(actionMeta)
         menuMod.triggered.connect(onModMenu)
 
+        labelDelay = QtGui.QLabel("Key delay:", dialog)
+        checkDelay = QtGui.QCheckBox(dialog)
+        checkDelay.stateChanged.connect(onCheckDelay)
+
+        spinDelay = DelaySpinBox()
+        spinDelay.setParent(dialog)
+        spinDelay.setSingleStep(50)
+        spinDelay.setRange(200, 9999)
+        spinDelay.setSuffix(" ms")
+        spinDelay.valueChanged.connect(onSpinDelay)
+
         layout = QtGui.QVBoxLayout()
         dialog.setLayout(layout)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -984,11 +1099,29 @@ def shortCuts():
         layoutGroupInvoke.insertLayout(0, layoutDefault)
         layoutGroupInvoke.insertLayout(1, layoutAdditional)
 
+        layoutDelay = QtGui.QHBoxLayout()
+        layoutDelay.insertWidget(0, labelDelay)
+        layoutDelay.addStretch(1)
+        layoutDelay.insertWidget(2, checkDelay)
+
+        layoutDelaySpin = QtGui.QHBoxLayout()
+        layoutDelaySpin.addStretch(1)
+        layoutDelaySpin.insertWidget(1, spinDelay)
+
+        groupTrigger = QtGui.QGroupBox("Autorun command")
+
+        layoutTrigger = QtGui.QVBoxLayout()
+        groupTrigger.setLayout(layoutTrigger)
+
+        layoutTrigger.insertLayout(0, layoutDelay)
+        layoutTrigger.insertLayout(1, layoutDelaySpin)
+
         stretch = QtGui.QHBoxLayout()
         stretch.addStretch(1)
 
         layoutSettingsLeft = QtGui.QVBoxLayout()
         layoutSettingsLeft.addWidget(groupInvoke)
+        layoutSettingsLeft.addWidget(groupTrigger)
 
         layoutSettingsRight = QtGui.QVBoxLayout()
         layoutSettingsRight.insertLayout(0, stretch)
@@ -1056,6 +1189,18 @@ def shortCuts():
                 actionDisable.trigger()
 
             editAdditional.setText(key)
+
+            if paramGet.GetBool("EnableDelay"):
+                checkDelay.setChecked(True)
+                spinDelay.setEnabled(True)
+            else:
+                checkDelay.setChecked(False)
+                spinDelay.setEnabled(False)
+
+            if paramGet.GetInt("Delay"):
+                spinDelay.setValue(paramGet.GetInt("Delay"))
+            else:
+                spinDelay.setValue(1000)
 
             updateTable()
             updateStats()
