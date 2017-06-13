@@ -1,5 +1,5 @@
 # ShortCuts overlay for FreeCAD
-# Copyright (C) 2016  triplus @ FreeCAD
+# Copyright (C) 2016, 2017 triplus @ FreeCAD
 #
 #
 # This library is free software; you can redistribute it and/or
@@ -15,12 +15,6 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
-
-
-from PySide import QtGui
-import FreeCADGui as Gui
-
-mw = Gui.getMainWindow()
 
 
 def shortCuts():
@@ -245,17 +239,28 @@ def shortCuts():
         index = index.split(",")
 
         for i in index:
-            command = (paramGet
-                       .GetGroup("Global shortcuts")
-                       .GetGroup(i)
-                       .GetString("command")
-                       .decode("UTF-8"))
-
-            shortcut = (paramGet
-                        .GetGroup("Global shortcuts")
-                        .GetGroup(i)
-                        .GetString("shortcut")
-                        .decode("UTF-8"))
+            try:
+                command = (paramGet
+                           .GetGroup("Global shortcuts")
+                           .GetGroup(i)
+                           .GetString("command")
+                           .decode("UTF-8"))
+            except AttributeError:
+                command = (paramGet
+                           .GetGroup("Global shortcuts")
+                           .GetGroup(i)
+                           .GetString("command"))
+            try:
+                shortcut = (paramGet
+                            .GetGroup("Global shortcuts")
+                            .GetGroup(i)
+                            .GetString("shortcut")
+                            .decode("UTF-8"))
+            except AttributeError:
+                shortcut = (paramGet
+                            .GetGroup("Global shortcuts")
+                            .GetGroup(i)
+                            .GetString("shortcut"))
 
             if command and shortcut:
                 currentGlobal[command] = shortcut
@@ -282,17 +287,28 @@ def shortCuts():
             index = index.split(",")
 
             for i in index:
-                command = (paramGet
-                           .GetGroup(activeWB)
-                           .GetGroup(i)
-                           .GetString("command")
-                           .decode("UTF-8"))
-
-                shortcut = (paramGet
-                            .GetGroup(activeWB)
-                            .GetGroup(i)
-                            .GetString("shortcut")
-                            .decode("UTF-8"))
+                try:
+                    command = (paramGet
+                               .GetGroup(activeWB)
+                               .GetGroup(i)
+                               .GetString("command")
+                               .decode("UTF-8"))
+                except AttributeError:
+                    command = (paramGet
+                               .GetGroup(activeWB)
+                               .GetGroup(i)
+                               .GetString("command"))
+                try:
+                    shortcut = (paramGet
+                                .GetGroup(activeWB)
+                                .GetGroup(i)
+                                .GetString("shortcut")
+                                .decode("UTF-8"))
+                except AttributeError:
+                    shortcut = (paramGet
+                                .GetGroup(activeWB)
+                                .GetGroup(i)
+                                .GetString("shortcut"))
 
                 if command and shortcut:
                     currentLocal[command] = shortcut
@@ -382,14 +398,23 @@ def shortCuts():
         index = index.split(",")
 
         for i in index:
-            if (paramGet
-                    .GetGroup(activeWB)
-                    .GetGroup(i)
-                    .GetString("command")
-                    .decode("UTF-8") == command):
-                indexNumber = i
-            else:
-                pass
+            try:
+                if (paramGet
+                        .GetGroup(activeWB)
+                        .GetGroup(i)
+                        .GetString("command")
+                        .decode("UTF-8") == command):
+                    indexNumber = i
+                else:
+                    pass
+            except AttributeError:
+                if (paramGet
+                        .GetGroup(activeWB)
+                        .GetGroup(i)
+                        .GetString("command") == command):
+                    indexNumber = i
+                else:
+                    pass
 
         if not indexNumber:
             x = 1
@@ -420,18 +445,31 @@ def shortCuts():
         index = index.split(",")
 
         for i in index:
-            if (paramGet
-                    .GetGroup(activeWB)
-                    .GetGroup(i)
-                    .GetString("command")
-                    .decode("UTF-8") == command):
-                index.remove(i)
-                paramGet.GetGroup(activeWB).RemGroup(i)
-                (paramGet
-                 .GetGroup(activeWB)
-                 .SetString("IndexList", ",".join(index)))
-            else:
-                pass
+            try:
+                if (paramGet
+                        .GetGroup(activeWB)
+                        .GetGroup(i)
+                        .GetString("command")
+                        .decode("UTF-8") == command):
+                    index.remove(i)
+                    paramGet.GetGroup(activeWB).RemGroup(i)
+                    (paramGet
+                     .GetGroup(activeWB)
+                     .SetString("IndexList", ",".join(index)))
+                else:
+                    pass
+            except AttributeError:
+                if (paramGet
+                        .GetGroup(activeWB)
+                        .GetGroup(i)
+                        .GetString("command") == command):
+                    index.remove(i)
+                    paramGet.GetGroup(activeWB).RemGroup(i)
+                    (paramGet
+                     .GetGroup(activeWB)
+                     .SetString("IndexList", ",".join(index)))
+                else:
+                    pass
 
     model = QtGui.QStandardItemModel()
     model.setColumnCount(1)
@@ -708,8 +746,14 @@ def shortCuts():
                      "META+"]
 
         enable = paramGet.GetBool("InvokeKey")
-        key = paramGet.GetString("InvokeKey").decode("UTF-8")
-        modifier = paramGet.GetString("ModifierKey").decode("UTF-8")
+        try:
+            key = paramGet.GetString("InvokeKey").decode("UTF-8")
+        except AttributeError:
+            key = paramGet.GetString("InvokeKey")
+        try:
+            modifier = paramGet.GetString("ModifierKey").decode("UTF-8")
+        except AttributeError:
+            modifier = paramGet.GetString("ModifierKey")
 
         if modifier in modifiers:
             pass
@@ -736,16 +780,12 @@ def shortCuts():
 
         invokeKey.setShortcut(QtGui.QKeySequence("W"))
 
-    mw.workbenchActivated.connect(setInvokeKey)
-
     def applyShortcuts():
         """
         Apply global and local shortcuts.
         """
         globalShortcuts()
         localShortcuts()
-
-    mw.workbenchActivated.connect(applyShortcuts)
 
     def prefDialog():
         """
@@ -843,7 +883,10 @@ def shortCuts():
             table = QtGui.QTableWidget(0, 2)
             table.verticalHeader().setVisible(False)
             table.setHorizontalHeaderLabels(["Command", "Shortcut"])
-            table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+            try:
+                table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+            except AttributeError:
+                table.horizontalHeader().setSectionResizeMode(QtGui.QHeaderView.Stretch)
 
             def onItemChanged(item):
                 """
@@ -853,24 +896,43 @@ def shortCuts():
                 activeWB = cBox.currentText()
 
                 if item.text() and activeWB and item.data(32):
-
-                    indexNumber = groupNum(activeWB,
-                                           item.data(32).encode("UTF-8"))
+                    try:
+                        indexNumber = groupNum(activeWB,
+                                               item.data(32).encode("UTF-8"))
+                    except TypeError:
+                        indexNumber = groupNum(activeWB,
+                                               item.data(32))
 
                     if indexNumber:
-                        (paramGet
-                         .GetGroup(activeWB)
-                         .GetGroup(indexNumber)
-                         .SetString("command", item.data(32).encode("UTF-8")))
-                        (paramGet
-                         .GetGroup(activeWB)
-                         .GetGroup(indexNumber)
-                         .SetString("shortcut",
-                                    item.text().upper().encode("UTF-8")))
+                        try:
+                            (paramGet
+                             .GetGroup(activeWB)
+                             .GetGroup(indexNumber)
+                             .SetString("command", item.data(32).encode("UTF-8")))
+                        except TypeError:
+                            (paramGet
+                             .GetGroup(activeWB)
+                             .GetGroup(indexNumber)
+                             .SetString("command", item.data(32)))
+                        try:
+                            (paramGet
+                             .GetGroup(activeWB)
+                             .GetGroup(indexNumber)
+                             .SetString("shortcut",
+                                        item.text().upper().encode("UTF-8")))
+                        except TypeError:
+                            (paramGet
+                             .GetGroup(activeWB)
+                             .GetGroup(indexNumber)
+                             .SetString("shortcut",
+                                        item.text().upper()))
                     else:
-                        print "ShortCuts: " + activeWB + " database is full."
+                        print("ShortCuts: " + activeWB + " database is full.")
                 elif activeWB and item.data(32):
-                    deleteGroup(activeWB, item.data(32).encode("UTF-8"))
+                    try:
+                        deleteGroup(activeWB, item.data(32).encode("UTF-8"))
+                    except TypeError:
+                        deleteGroup(activeWB, item.data(32))
                 else:
                     pass
 
@@ -932,8 +994,14 @@ def shortCuts():
 
             if text:
                 text = text[-1:]
-                paramGet.SetString("InvokeKey", text.encode("UTF-8"))
-                key = paramGet.GetString("InvokeKey").decode("UTF-8")
+                try:
+                    paramGet.SetString("InvokeKey", text.encode("UTF-8"))
+                except TypeError:
+                    paramGet.SetString("InvokeKey", text)
+                try:
+                    key = paramGet.GetString("InvokeKey").decode("UTF-8")
+                except AttributeError:
+                    key = paramGet.GetString("InvokeKey")
 
                 editAdditional.blockSignals(True)
                 editAdditional.setText(key)
@@ -960,8 +1028,11 @@ def shortCuts():
             else:
                 editAdditional.setEnabled(True)
                 paramGet.SetBool("InvokeKey", 1)
-                paramGet.SetString("ModifierKey",
-                                   i.text().encode("UTF-8"))
+                try:
+                    paramGet.SetString("ModifierKey",
+                                       i.text().encode("UTF-8"))
+                except TypeError:
+                    paramGet.SetString("ModifierKey", i.text())
 
             setInvokeKey()
 
@@ -1174,8 +1245,14 @@ def shortCuts():
             editDefault.setText(invokeKey.shortcut().toString())
 
             enable = paramGet.GetBool("InvokeKey")
-            key = paramGet.GetString("InvokeKey").decode("UTF-8")
-            modifier = paramGet.GetString("ModifierKey").decode("UTF-8")
+            try:
+                key = paramGet.GetString("InvokeKey").decode("UTF-8")
+            except AttributeError:
+                key = paramGet.GetString("InvokeKey")
+            try:
+                modifier = paramGet.GetString("ModifierKey").decode("UTF-8")
+            except AttributeError:
+                modifier = paramGet.GetString("ModifierKey")
 
             if enable and modifier:
                 for i in menuMod.actions():
@@ -1209,9 +1286,25 @@ def shortCuts():
 
         return dialog
 
+    def onStart():
+        """Start shortcuts."""
 
-# Single instance
-if mw.findChild(QtGui.QAction, "Std_ShortCuts"):
-    pass
-else:
-    shortCuts()
+        start = False
+        try:
+            mw.workbenchActivated
+            start = True
+        except AttributeError:
+            pass
+
+        if start:
+            startTimer.stop()
+            startTimer.deleteLater()
+            mw.workbenchActivated.connect(setInvokeKey)
+            mw.workbenchActivated.connect(applyShortcuts)
+
+    startTimer = delayTimer()
+    startTimer.timeout.connect(onStart)
+    startTimer.start(500)
+
+
+shortCuts()
