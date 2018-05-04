@@ -1,9 +1,9 @@
 # ShortCuts
-Shortcuts overlay for FreeCAD
+Shortcuts manager and overlay for FreeCAD
 
 ### Installation:
 
-ShortCuts can be installed as FreeCAD module or it can be used as FreeCAD macro. If ShortCuts is installed as FreeCAD module it will be available after FreeCAD is started. Install path for FreeCAD modules depends on the operating system used.
+Install path for FreeCAD modules depends on the operating system used.
 
 ##### Examples:
 
@@ -20,10 +20,6 @@ Windows:
 `C:\Users\user_name\AppData\Roaming\FreeCAD\Mod\ShortCuts\InitGui.py`
 
 
-##### Note:
-
-When ShortCuts is used as macro InitGui.py file can be used directly or for convenience it can be renamed to ShortCuts.FCMacro.
-
 ### Usage:
 
-Press the W key on the keyboard to start using ShortCuts.
+Shortcuts manager preferences are located under Tools -> Accessories -> Shortcuts. To invoke shortcuts overlay feature press the W key on the keyboard.

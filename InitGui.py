@@ -1,5 +1,5 @@
 # ShortCuts overlay for FreeCAD
-# Copyright (C) 2016, 2017 triplus @ FreeCAD
+# Copyright (C) 2016, 2017, 2018 triplus @ FreeCAD
 #
 #
 # This library is free software; you can redistribute it and/or
@@ -380,7 +380,7 @@ def shortCuts():
                 else:
                     pass
 
-                shortcut.setData(QtCore.Qt.UserRole, actions[i].objectName())
+                shortcut.setData(32, actions[i].objectName())
 
                 items.append([command, shortcut])
             else:
@@ -513,8 +513,7 @@ def shortCuts():
 
                     item.setToolTip(actions[command].toolTip())
                     item.setEnabled(actions[command].isEnabled())
-                    item.setData(actions[command].objectName(),
-                                 QtCore.Qt.UserRole)
+                    item.setData(actions[command].objectName(), 32)
 
                     model.setItem(row, 0, item)
                     row += 1
@@ -546,8 +545,7 @@ def shortCuts():
 
                     item.setToolTip(actions[command].toolTip())
                     item.setEnabled(actions[command].isEnabled())
-                    item.setData(actions[command].objectName(),
-                                 QtCore.Qt.UserRole)
+                    item.setData(actions[command].objectName(), 32)
 
                     model.setItem(row, 0, item)
                     row += 1
@@ -590,7 +588,7 @@ def shortCuts():
 
         index = completer.completionModel().mapToSource(modelIndex)
         item = model.itemFromIndex(index)
-        data = item.data(QtCore.Qt.UserRole)
+        data = item.data(32)
 
         if data in actions:
             actions[data].trigger()
@@ -725,60 +723,12 @@ def shortCuts():
 
     invokeKey = QtGui.QAction(mw)
     invokeKey.setAutoRepeat(False)
+    invokeKey.setText("Shortcuts")
     invokeKey.setObjectName("Std_ShortCuts")
     invokeKey.setShortcut(QtGui.QKeySequence("W"))
     invokeKey.triggered.connect(setVisibility)
 
-    additionalKey = QtGui.QAction(mw)
-    additionalKey.setAutoRepeat(False)
-    additionalKey.triggered.connect(setVisibility)
-
     mw.addAction(invokeKey)
-    mw.addAction(additionalKey)
-
-    def setInvokeKey():
-        """
-        Set invoke and additional invoke key shortcut combination.
-        """
-        modifiers = ["CTRL+",
-                     "SHIFT+",
-                     "ALT+",
-                     "META+"]
-
-        enable = paramGet.GetBool("InvokeKey")
-        try:
-            key = paramGet.GetString("InvokeKey").decode("UTF-8")
-        except AttributeError:
-            key = paramGet.GetString("InvokeKey")
-        try:
-            modifier = paramGet.GetString("ModifierKey").decode("UTF-8")
-        except AttributeError:
-            modifier = paramGet.GetString("ModifierKey")
-
-        if modifier in modifiers:
-            pass
-        else:
-            modifier = None
-
-        if enable and modifier and key:
-            text = modifier + key
-        elif enable and key:
-            text = key
-        else:
-            text = False
-
-        if text:
-            additionalKey.setShortcut(QtGui.QKeySequence(text))
-        else:
-            additionalKey.setShortcut(None)
-
-        for i in mw.findChildren(QtGui.QAction):
-            if i.shortcut().toString() == "W":
-                i.setShortcut(None)
-            else:
-                pass
-
-        invokeKey.setShortcut(QtGui.QKeySequence("W"))
 
     def applyShortcuts():
         """
@@ -791,21 +741,6 @@ def shortCuts():
         """
         Preferences dialog.
         """
-        class InvokeEdit(QtGui.QLineEdit):
-            """
-            Invoke key line edit.
-            """
-            def __init__(self, parent=None):
-                super(InvokeEdit, self).__init__(parent)
-
-            def keyPressEvent(self, e):
-                """
-                Set focus (button Done) on Return key pressed.
-                """
-                if e.key() == QtCore.Qt.Key_Return:
-                    buttonDone.setFocus()
-                else:
-                    QtGui.QLineEdit.keyPressEvent(self, e)
 
         class DelaySpinBox(QtGui.QSpinBox):
             """
@@ -884,9 +819,13 @@ def shortCuts():
             table.verticalHeader().setVisible(False)
             table.setHorizontalHeaderLabels(["Command", "Shortcut"])
             try:
-                table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+                table.horizontalHeader().setResizeMode(QtGui
+                                                       .QHeaderView
+                                                       .Stretch)
             except AttributeError:
-                table.horizontalHeader().setSectionResizeMode(QtGui.QHeaderView.Stretch)
+                table.horizontalHeader().setSectionResizeMode(QtGui
+                                                              .QHeaderView
+                                                              .Stretch)
 
             def onItemChanged(item):
                 """
@@ -908,7 +847,8 @@ def shortCuts():
                             (paramGet
                              .GetGroup(activeWB)
                              .GetGroup(indexNumber)
-                             .SetString("command", item.data(32).encode("UTF-8")))
+                             .SetString("command",
+                                        item.data(32).encode("UTF-8")))
                         except TypeError:
                             (paramGet
                              .GetGroup(activeWB)
@@ -985,57 +925,6 @@ def shortCuts():
                               "Global: " +
                               "<b>" + str(len(currentGlobal)) + "</b>")
 
-        def setKey():
-            """
-            Save additional invoke key in the database.
-            Set additional action shortcut.
-            """
-            text = editAdditional.text().upper()
-
-            if text:
-                text = text[-1:]
-                try:
-                    paramGet.SetString("InvokeKey", text.encode("UTF-8"))
-                except TypeError:
-                    paramGet.SetString("InvokeKey", text)
-                try:
-                    key = paramGet.GetString("InvokeKey").decode("UTF-8")
-                except AttributeError:
-                    key = paramGet.GetString("InvokeKey")
-
-                editAdditional.blockSignals(True)
-                editAdditional.setText(key)
-                editAdditional.blockSignals(False)
-                setInvokeKey()
-            else:
-                additionalKey.setShortcut(None)
-
-        def onModMenu(i):
-            """
-            Save modifier key in the database.
-            Set additional action shortcut.
-            """
-            buttonMod.setText(i.text())
-
-            if i.text() == "Disable":
-                editAdditional.setEnabled(False)
-                paramGet.SetBool("InvokeKey", 0)
-                paramGet.RemString("ModifierKey")
-            elif i.text() == "None":
-                editAdditional.setEnabled(True)
-                paramGet.SetBool("InvokeKey", 1)
-                paramGet.RemString("ModifierKey")
-            else:
-                editAdditional.setEnabled(True)
-                paramGet.SetBool("InvokeKey", 1)
-                try:
-                    paramGet.SetString("ModifierKey",
-                                       i.text().encode("UTF-8"))
-                except TypeError:
-                    paramGet.SetString("ModifierKey", i.text())
-
-            setInvokeKey()
-
         def onCheckDelay():
             """
             Save enable or disable autorun command state.
@@ -1083,40 +972,6 @@ def shortCuts():
         buttonSettings = QtGui.QPushButton("Settings", home)
         buttonDone = QtGui.QPushButton("Done", settings)
 
-        labelDefault = QtGui.QLabel("Default:")
-
-        editDefault = QtGui.QLineEdit()
-        editDefault.setEnabled(False)
-        editDefault.setMaximumWidth(70)
-        editDefault.setAlignment(QtCore.Qt.AlignHCenter)
-
-        labelAdditional = QtGui.QLabel("Additional:")
-
-        editAdditional = InvokeEdit()
-        editAdditional.setMaximumWidth(70)
-        editAdditional.setAlignment(QtCore.Qt.AlignHCenter)
-        editAdditional.textChanged.connect(setKey)
-
-        buttonMod = QtGui.QPushButton()
-        menuMod = QtGui.QMenu(buttonMod)
-        buttonMod.setMenu(menuMod)
-
-        actionDisable = QtGui.QAction("Disable", menuMod)
-        actionNone = QtGui.QAction("None", menuMod)
-        actionCtrl = QtGui.QAction("CTRL+", menuMod)
-        actionShift = QtGui.QAction("SHIFT+", menuMod)
-        actionAlt = QtGui.QAction("ALT+", menuMod)
-        actionMeta = QtGui.QAction("META+", menuMod)
-
-        menuMod.addAction(actionDisable)
-        menuMod.addSeparator()
-        menuMod.addAction(actionNone)
-        menuMod.addAction(actionCtrl)
-        menuMod.addAction(actionShift)
-        menuMod.addAction(actionAlt)
-        menuMod.addAction(actionMeta)
-        menuMod.triggered.connect(onModMenu)
-
         labelDelay = QtGui.QLabel("Key delay:", dialog)
         checkDelay = QtGui.QCheckBox(dialog)
         checkDelay.stateChanged.connect(onCheckDelay)
@@ -1151,25 +1006,6 @@ def shortCuts():
         layoutSettingsBottom.addWidget(buttonDone)
         layoutSettingsBottom.addStretch(1)
 
-        layoutDefault = QtGui.QHBoxLayout()
-        layoutDefault.insertWidget(0, labelDefault)
-        layoutDefault.addStretch(1)
-        layoutDefault.insertWidget(2, editDefault)
-
-        layoutAdditional = QtGui.QHBoxLayout()
-        layoutAdditional.insertWidget(0, labelAdditional)
-        layoutAdditional.addStretch(1)
-        layoutAdditional.insertWidget(2, buttonMod)
-        layoutAdditional.insertWidget(3, editAdditional)
-
-        groupInvoke = QtGui.QGroupBox("Invoke key")
-
-        layoutGroupInvoke = QtGui.QVBoxLayout()
-        groupInvoke.setLayout(layoutGroupInvoke)
-
-        layoutGroupInvoke.insertLayout(0, layoutDefault)
-        layoutGroupInvoke.insertLayout(1, layoutAdditional)
-
         layoutDelay = QtGui.QHBoxLayout()
         layoutDelay.insertWidget(0, labelDelay)
         layoutDelay.addStretch(1)
@@ -1187,21 +1023,7 @@ def shortCuts():
         layoutTrigger.insertLayout(0, layoutDelay)
         layoutTrigger.insertLayout(1, layoutDelaySpin)
 
-        stretch = QtGui.QHBoxLayout()
-        stretch.addStretch(1)
-
-        layoutSettingsLeft = QtGui.QVBoxLayout()
-        layoutSettingsLeft.addWidget(groupInvoke)
-        layoutSettingsLeft.addWidget(groupTrigger)
-
-        layoutSettingsRight = QtGui.QVBoxLayout()
-        layoutSettingsRight.insertLayout(0, stretch)
-
-        layoutSettingsCombine = QtGui.QHBoxLayout()
-        layoutSettingsCombine.insertLayout(0, layoutSettingsLeft)
-        layoutSettingsCombine.insertLayout(1, layoutSettingsRight)
-
-        layoutSettings.insertLayout(0, layoutSettingsCombine)
+        layoutSettings.addWidget(groupTrigger)
         layoutSettings.addStretch(1)
         layoutSettings.insertLayout(2, layoutSettingsBottom)
 
@@ -1242,30 +1064,6 @@ def shortCuts():
             """
             Set preferences default values.
             """
-            editDefault.setText(invokeKey.shortcut().toString())
-
-            enable = paramGet.GetBool("InvokeKey")
-            try:
-                key = paramGet.GetString("InvokeKey").decode("UTF-8")
-            except AttributeError:
-                key = paramGet.GetString("InvokeKey")
-            try:
-                modifier = paramGet.GetString("ModifierKey").decode("UTF-8")
-            except AttributeError:
-                modifier = paramGet.GetString("ModifierKey")
-
-            if enable and modifier:
-                for i in menuMod.actions():
-                    if i.text() == modifier:
-                        i.trigger()
-                    else:
-                        pass
-            elif enable:
-                actionNone.trigger()
-            else:
-                actionDisable.trigger()
-
-            editAdditional.setText(key)
 
             if paramGet.GetBool("EnableDelay"):
                 checkDelay.setChecked(True)
@@ -1299,8 +1097,8 @@ def shortCuts():
         if start:
             startTimer.stop()
             startTimer.deleteLater()
-            mw.workbenchActivated.connect(setInvokeKey)
             mw.workbenchActivated.connect(applyShortcuts)
+            import ShortCuts_Gui
 
     startTimer = delayTimer()
     startTimer.timeout.connect(onStart)
