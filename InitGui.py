@@ -723,9 +723,9 @@ def shortCuts():
 
     invokeKey = QtGui.QAction(mw)
     invokeKey.setAutoRepeat(False)
-    invokeKey.setText("Shortcuts")
-    invokeKey.setObjectName("Std_ShortCuts")
-    invokeKey.setShortcut(QtGui.QKeySequence("W"))
+    invokeKey.setText("Invoke shortcuts overlay")
+    invokeKey.setObjectName("InvokeShortCutsOverlay")
+    invokeKey.setShortcut(QtGui.QKeySequence("Shift+Q"))
     invokeKey.triggered.connect(setVisibility)
 
     mw.addAction(invokeKey)
