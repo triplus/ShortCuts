@@ -472,6 +472,15 @@ def onStart():
         mw.workbenchActivated.connect(onWorkbench)
 
 
+def onPreStart():
+    """Improve start reliability and maintain FreeCAD 0.16 support."""
+    if App.Version()[1] < "17":
+        onStart()
+    else:
+        if mw.property("eventLoop"):
+            onStart()
+
+
 timer = QtCore.QTimer()
-timer.timeout.connect(onStart)
+timer.timeout.connect(onPreStart)
 timer.start(500)

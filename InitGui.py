@@ -1100,8 +1100,16 @@ def shortCuts():
             mw.workbenchActivated.connect(applyShortcuts)
             import ShortCuts_Gui
 
+    def onPreStart():
+        """"""
+        if App.Version()[1] < "17":
+            onStart()
+        else:
+            if mw.property("eventLoop"):
+                onStart()
+
     startTimer = delayTimer()
-    startTimer.timeout.connect(onStart)
+    startTimer.timeout.connect(onPreStart)
     startTimer.start(500)
 
 
