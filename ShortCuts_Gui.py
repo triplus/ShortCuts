@@ -447,10 +447,8 @@ def accessoriesMenu():
 
             def addMenu():
                 """Add accessories menu to the menu bar."""
-                toolsMenu = mb.findChild(QtGui.QMenu, "&Tools")
-                if toolsMenu:
-                    toolsMenu.addAction(action)
-                    action.setVisible(True)
+                mb.addAction(action)
+                action.setVisible(True)
 
             addMenu()
             mw.workbenchActivated.connect(addMenu)

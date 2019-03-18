@@ -22,4 +22,4 @@ Windows:
 
 ### Usage:
 
-Shortcuts manager preferences are located under Tools -> Accessories -> Shortcuts. To invoke shortcuts overlay feature press the Shift+Q key combination on the keyboard.
+Shortcuts manager preferences are located under Accessories -> Shortcuts. To invoke shortcuts overlay feature press the Shift+Q key combination on the keyboard.
