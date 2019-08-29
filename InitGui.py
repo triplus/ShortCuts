@@ -72,19 +72,19 @@ def shortCuts():
         </svg>"""
 
     iconPixNone = QtGui.QPixmap()
-    iconPixNone.loadFromData(iconSvgNone)
+    iconPixNone.loadFromData(str.encode(iconSvgNone))
 
     iconPixLocal = QtGui.QPixmap()
-    iconPixLocal.loadFromData(iconSvgLocal)
+    iconPixLocal.loadFromData(str.encode(iconSvgLocal))
 
     iconPixGlobal = QtGui.QPixmap()
-    iconPixGlobal.loadFromData(iconSvgGlobal)
+    iconPixGlobal.loadFromData(str.encode(iconSvgGlobal))
 
     iconPixLG = QtGui.QPixmap()
-    iconPixLG.loadFromData(iconSvgLG)
+    iconPixLG.loadFromData(str.encode(iconSvgLG))
 
     iconPixPref = QtGui.QPixmap()
-    iconPixPref.loadFromData(iconSvgPref)
+    iconPixPref.loadFromData(str.encode(iconSvgPref))
 
     iconFreeCAD = QtGui.QIcon.fromTheme("freecad")
 
