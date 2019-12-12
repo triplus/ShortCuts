@@ -40,16 +40,19 @@ path = os.path.dirname(__file__) + "/Resources/icons/"
 def wbIcon(i):
     """Create workbench icon."""
     if str(i.find("XPM")) != "-1":
-        icon = []
-        for a in ((((i
-                     .split('{', 1)[1])
-                    .rsplit('}', 1)[0])
-                   .strip())
-                  .split("\n")):
-            icon.append((a
-                         .split('"', 1)[1])
-                        .rsplit('"', 1)[0])
-        icon = QtGui.QIcon(QtGui.QPixmap(icon))
+        try:
+            icon = []
+            for a in ((((i
+                         .split('{', 1)[1])
+                        .rsplit('}', 1)[0])
+                       .strip())
+                      .split("\n")):
+                icon.append((a
+                             .split('"', 1)[1])
+                            .rsplit('"', 1)[0])
+            icon = QtGui.QIcon(QtGui.QPixmap(icon))
+        except:
+            icon = QtGui.QIcon(":/icons/freecad")
     else:
         icon = QtGui.QIcon(QtGui.QPixmap(i))
     if icon.isNull():
