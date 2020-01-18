@@ -134,6 +134,20 @@ def applyShortcuts():
             actions[s].setShortcut(QtGui.QKeySequence(scheme[s]))
 
 
+def printShortcuts():
+    """Print active shortcuts to the report view"""
+    for a in mw.findChildren(QtGui.QAction):
+        if a.shortcut().toString():
+            if a.text():
+                text = a.text()
+            else:
+                text = "N/A"
+            App.Console.PrintMessage(text.replace("&", "") +
+                                     "\t" +
+                                     a.shortcut().toString() +
+                                     "\n")
+
+
 def updateDict(source, wb, d):
     """Update dictionary."""
     if not hasGroup(source, wb):
@@ -351,9 +365,15 @@ def preferences():
     btnClose.setToolTip("Close the preferences dialog")
     btnClose.clicked.connect(onAccepted)
 
-    loBtnClose = QtGui.QHBoxLayout()
-    loBtnClose.addStretch()
-    loBtnClose.addWidget(btnClose)
+    # Button print
+    btnPrint = QtGui.QPushButton("Print")
+    btnPrint.setToolTip("Print active shortcuts to the report view")
+    btnPrint.clicked.connect(printShortcuts)
+
+    loBtn = QtGui.QHBoxLayout()
+    loBtn.addWidget(btnPrint)
+    loBtn.addStretch()
+    loBtn.addWidget(btnClose)
 
     # Combo
     cBox = comboBox()
@@ -412,7 +432,7 @@ def preferences():
 
     layout.insertLayout(0, loTop)
     layout.addWidget(table)
-    layout.insertLayout(2, loBtnClose)
+    layout.insertLayout(2, loBtn)
 
     btnClose.setDefault(True)
     btnClose.setFocus()
