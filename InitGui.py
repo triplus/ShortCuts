@@ -239,6 +239,7 @@ def shortCuts():
         index = index.split(",")
 
         for i in index:
+            if not i: continue
             try:
                 command = (paramGet
                            .GetGroup("Global shortcuts")
@@ -287,6 +288,7 @@ def shortCuts():
             index = index.split(",")
 
             for i in index:
+                if not i: continue
                 try:
                     command = (paramGet
                                .GetGroup(activeWB)
